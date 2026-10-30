@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-cream-100 font-sans text-ink antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-serif font-normal text-ink;
+  }
+  :focus-visible {
+    outline: 2px solid theme('colors.olive.600');
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .container-x {
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-8;
+  }
+  .section {
+    @apply py-16 sm:py-20;
+  }
+  .eyebrow {
+    @apply text-xs font-medium uppercase tracking-[0.18em] text-olive-700;
+  }
+  .section-title {
+    @apply font-serif text-3xl leading-tight sm:text-4xl;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-6 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply bg-olive-700 text-cream-50 shadow-sm hover:bg-olive-800;
+  }
+  .btn-outline {
+    @apply border border-gold-400 bg-cream-50/70 text-olive-800 hover:bg-cream-200;
+  }
+  .btn-ghost {
+    @apply text-olive-800 hover:bg-olive-700/10;
+  }
+  .btn-danger {
+    @apply bg-red-700 text-white hover:bg-red-800;
+  }
+  .btn-sm {
+    @apply px-4 py-1.5 text-xs;
+  }
+
+  .card {
+    @apply rounded-2xl border border-gold-300/80 bg-cream-50 shadow-soft;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-gold-300 bg-cream-50 px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/40 focus:border-olive-600 focus:outline-none focus:ring-1 focus:ring-olive-600 disabled:bg-cream-200/60;
+  }
+  .input-invalid {
+    @apply border-red-500 focus:border-red-500 focus:ring-red-500;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-ink/80;
+  }
+
+  .chip {
+    @apply inline-flex items-center rounded-full border border-gold-300 bg-cream-50 px-3 py-1 text-xs font-medium text-olive-800 transition hover:bg-cream-200;
+  }
+  .chip-active {
+    @apply border-olive-700 bg-olive-700 text-cream-50 hover:bg-olive-800;
+  }
+
+  .th {
+    @apply whitespace-nowrap px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-ink/60;
+  }
+  .td {
+    @apply px-4 py-3 align-middle text-sm;
+  }
+}
