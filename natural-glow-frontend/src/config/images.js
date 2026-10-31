@@ -9,7 +9,7 @@ export const IMAGES = {
     '/images/hero.webp',
   ],
   aboutMain: '/images/about.webp',
-  aboutSecondary: '/images/2150771266.webp',
+  aboutSecondary: '/images/about-2.webp',
   map: '/images/map.jpg',
 };
 
