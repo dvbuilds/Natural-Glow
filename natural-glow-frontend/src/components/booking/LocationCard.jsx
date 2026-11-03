@@ -1,28 +1,37 @@
-import { IMAGES } from '../../config/images.js';
 import { useSettings } from '../../context/SettingsContext.jsx';
 import { WEEKDAYS, dayLabel } from '../../lib/constants.js';
 import { to12h } from '../../lib/format.js';
-import ImageSlot from '../ui/ImageSlot.jsx';
 import Icon from '../ui/Icon.jsx';
 
-const isEmbed = (url) => /google\.[a-z.]+\/maps\/embed|output=embed/i.test(url);
+const MAP_QUERY = 'Abdul Samad Ln, Garulia, Kolkata, West Bengal 743133';
+const DEFAULT_EMBED = `https://www.google.com/maps?q=${encodeURIComponent(MAP_QUERY)}&output=embed`;
+const DIRECTIONS_URL = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(MAP_QUERY)}`;
 
-// Location, contact details and opening hours — everything comes from GET /settings; empty fields are hidden.
+const isEmbed = (url) => /google\.[a-z.]+\/maps\/embed|output=embed/i.test(url || '');
+
+// Location, contact details and opening hours — details come from GET /settings; empty fields are hidden.
 export default function LocationCard({ withMap = true }) {
   const { settings, addressLine } = useSettings();
   const hours = WEEKDAYS.map((d) => settings.workingHours.find((h) => h.day === d)).filter(Boolean);
   const hasAny = addressLine || settings.phone || settings.email || hours.length;
+  const embedSrc = isEmbed(settings.mapUrl) ? settings.mapUrl : DEFAULT_EMBED;
 
   return (
-    <div className="relative min-h-[360px] overflow-hidden rounded-2xl border border-gold-300/80 shadow-soft">
-      {withMap &&
-        (isEmbed(settings.mapUrl) ? (
-          <iframe title="Map" src={settings.mapUrl} className="absolute inset-0 h-full w-full border-0" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
-        ) : (
-          <ImageSlot src={IMAGES.map} alt="Map" label="Map image" hint="public/images/map.jpg · or paste a Google Maps embed URL in Admin → Settings" className="absolute inset-0" labelAlign="right" />
-        ))}
+    <div className="flex h-full min-h-[360px] flex-col overflow-hidden rounded-2xl border border-gold-300/80 bg-cream-50 shadow-soft">
+      {withMap && (
+        <div className="relative min-h-[220px] flex-1">
+          <iframe
+            title="Salon location map"
+            src={embedSrc}
+            className="absolute inset-0 h-full w-full border-0"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen
+          />
+        </div>
+      )}
 
-      <div className={`${withMap ? 'relative m-4 ml-auto max-w-sm' : ''} rounded-xl border border-gold-300/80 bg-cream-50/95 p-5 text-sm backdrop-blur`}>
+      <div className="border-t border-gold-300/80 p-5 text-sm">
         {!hasAny && <p className="text-ink/65">Location and contact details will appear here once the salon adds them.</p>}
         {addressLine && (
           <div>
@@ -59,11 +68,9 @@ export default function LocationCard({ withMap = true }) {
             </ul>
           </div>
         )}
-        {settings.mapUrl && (
-          <a href={settings.mapUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm mt-4">
-            Get directions <Icon name="external" size={14} />
-          </a>
-        )}
+        <a href={DIRECTIONS_URL} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm mt-4">
+          Get directions <Icon name="external" size={14} />
+        </a>
       </div>
     </div>
   );

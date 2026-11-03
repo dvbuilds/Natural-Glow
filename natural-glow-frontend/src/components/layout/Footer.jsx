@@ -13,6 +13,12 @@ export default function Footer() {
   const { settings, addressLine } = useSettings();
   const socials = SOCIALS.filter((s) => settings.social[s.key]);
 
+  console.log({
+  settings,
+  addressLine,
+  phone: settings.phone,
+});
+
   return (
     <footer className="bg-olive-800 text-cream-100">
       <div className="container-x grid gap-10 py-14 md:grid-cols-[1.4fr_1fr_1fr_1fr]">

@@ -3,6 +3,7 @@ import AboutPreview from '../components/home/AboutPreview.jsx';
 import ServicesPreview from '../components/home/ServicesPreview.jsx';
 import HowItWorks from '../components/home/HowItWorks.jsx';
 import GalleryPreview from '../components/home/GalleryPreview.jsx';
+import MakeupShowcase from '../components/home/MakeupShowcase.jsx';
 import TestimonialsSection from '../components/home/TestimonialsSection.jsx';
 import OffersSection from '../components/offers/OffersSection.jsx';
 import BookingSection from '../components/booking/BookingSection.jsx';
@@ -24,6 +25,7 @@ export default function Home() {
       <Hero />
       <AboutPreview />
       <ServicesPreview />
+      <MakeupShowcase />
       <HowItWorks />
       <OffersSection compact hideWhenEmpty />
       <GalleryPreview />

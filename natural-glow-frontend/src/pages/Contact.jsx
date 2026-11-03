@@ -22,9 +22,10 @@ export default function Contact() {
       </PageHeader>
 
       <section id="booking" className="section scroll-mt-24 pt-4">
-        <div className="container-x grid items-start gap-6 lg:grid-cols-2">
+        {/* items-stretch makes both columns the same height */}
+        <div className="container-x grid items-stretch gap-6 lg:grid-cols-2">
           <BookingForm />
-          <div className="space-y-6">
+          <div className="flex flex-col gap-6">
             {waHref && (
               <a href={waHref} target="_blank" rel="noopener noreferrer" className="card flex items-center gap-4 p-5 transition hover:bg-cream-200">
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1f8f4f] text-white"><Icon name="whatsapp" size={24} /></span>
@@ -35,7 +36,10 @@ export default function Contact() {
                 <Icon name="arrow-right" size={18} className="ml-auto text-olive-700" />
               </a>
             )}
-            <LocationCard />
+            {/* The map card grows to fill the remaining height beside the form */}
+            <div className="flex min-h-[320px] flex-1 flex-col [&>*]:flex-1">
+              <LocationCard />
+            </div>
           </div>
         </div>
       </section>

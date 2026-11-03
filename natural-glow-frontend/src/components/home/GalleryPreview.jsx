@@ -5,25 +5,41 @@ import { useApi } from '../../hooks/useApi.js';
 import { optimizeImage } from '../../lib/format.js';
 import ImageSlot from '../ui/ImageSlot.jsx';
 
-const COUNT = 10;
+const COUNT = 6; // tiles shown on the home page
+const FETCH = 12; // candidates fetched so orientation matching has choices
 
-// Bento-style spans (index -> classes). Works with grid-flow-dense on a 2-col (mobile) / 3-col (md+) grid.
-const SPANS = [
-  'row-span-2', // 0 tall
-  '', // 1
-  'row-span-2', // 2 tall
-  '', // 3
-  'col-span-2 row-span-2', // 4 wide hero
-  '', // 5
-  '', // 6
-  '', // 7
-  '', // 8
-  'col-span-2 md:col-span-1', // 9
-];
+// 12-col grid with square units. p = 3:4 portrait, l = 3:2 landscape.
+// Desktop rows: P P L / L P P.   Mobile: P P / L / L / P P.
+const SHAPES = ['p', 'p', 'l', 'l', 'p', 'p'];
+
+const SHAPE_CLASS = {
+  p: 'col-span-6 row-span-8 md:col-span-3 md:row-span-4',
+  l: 'col-span-12 row-span-8 md:col-span-6 md:row-span-4',
+};
+
+// Cloudinary crops to the tile's own ratio (g_auto keeps faces/hair in frame)
+const SHAPE_CROP = {
+  p: 'f_auto,q_auto,w_800,h_1067,c_fill,g_auto',
+  l: 'f_auto,q_auto,w_1200,h_800,c_fill,g_auto',
+};
+
+// Needs item.image.width/height (Cloudinary returns them on upload). If missing -> 'u' (unknown).
+const orient = (it) =>
+  it?.image?.width && it?.image?.height ? (it.image.width >= it.image.height ? 'l' : 'p') : 'u';
+
+// Fill each slot with a photo of the matching orientation, falling back to whatever is left.
+function arrange(items) {
+  const pool = { l: [], p: [], u: [] };
+  items.forEach((it) => pool[orient(it)].push(it));
+  return SHAPES.map(
+    (s) => pool[s].shift() || pool.u.shift() || pool.l.shift() || pool.p.shift() || null
+  );
+}
 
 function Tile({ item, index, active, anyActive, onHover, onOpen, isLast }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
+  const shape = SHAPES[index];
 
   // Scroll-reveal, staggered by index
   useEffect(() => {
@@ -71,7 +87,7 @@ function Tile({ item, index, active, anyActive, onHover, onOpen, isLast }) {
       style={{ transitionDelay: visible ? `${index * 60}ms` : '0ms' }}
       className={`group relative overflow-hidden rounded-3xl bg-neutral-100 shadow-sm
         transition-all duration-700 ease-out will-change-transform motion-reduce:transition-none
-        ${SPANS[index] || ''}
+        ${SHAPE_CLASS[shape]}
         ${visible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}
         ${anyActive && !active ? 'scale-[0.97] opacity-60 saturate-50' : ''}
         ${active ? 'z-10 shadow-2xl' : ''}`}
@@ -88,11 +104,11 @@ function Tile({ item, index, active, anyActive, onHover, onOpen, isLast }) {
             className="block h-full w-full cursor-zoom-in focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/60"
           >
             <img
-              src={optimizeImage(item.image.url, 'f_auto,q_auto,w_900,c_fill')}
+              src={optimizeImage(item.image.url, SHAPE_CROP[shape])}
               alt={label}
               loading="lazy"
               draggable="false"
-              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 motion-reduce:transform-none"
+              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 motion-reduce:transform-none"
             />
             <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
             <span className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-3 p-4 text-left text-sm font-medium text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
@@ -110,14 +126,14 @@ function Tile({ item, index, active, anyActive, onHover, onOpen, isLast }) {
         )}
       </div>
 
-      {/* Floating "view all" pill, like the corner button in the reference */}
+      {/* Floating "view all" pill on the last tile */}
       {isLast && (
         <Link
           to="/gallery"
           aria-label="View full gallery"
-          className="absolute bottom-3 right-3 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow-lg backdrop-blur transition-all duration-300 hover:w-40 hover:bg-white"
+          className="group/pill absolute bottom-3 right-3 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow-lg backdrop-blur transition-all duration-300 hover:w-36 hover:bg-white"
         >
-          <span className="overflow-hidden whitespace-nowrap text-sm font-semibold opacity-0 transition-opacity duration-300 group-hover:opacity-0 hover:opacity-100 [a:hover>&]:opacity-100 [a:hover>&]:pr-2">
+          <span className="w-0 overflow-hidden whitespace-nowrap text-sm font-semibold opacity-0 transition-all duration-300 group-hover/pill:mr-2 group-hover/pill:w-auto group-hover/pill:opacity-100">
             View all
           </span>
           <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -129,7 +145,8 @@ function Tile({ item, index, active, anyActive, onHover, onOpen, isLast }) {
   );
 }
 
-function Lightbox({ items, index, onClose, onChange }) {
+// Exported so the /gallery page can reuse it.
+export function Lightbox({ items, index, onClose, onChange }) {
   const item = items[index];
   const go = useCallback(
     (d) => onChange((index + d + items.length) % items.length),
@@ -202,15 +219,15 @@ function Lightbox({ items, index, onClose, onChange }) {
   );
 }
 
-// Shows the first published gallery images in an interactive bento mosaic; placeholders fill empty tiles
-// until images are uploaded in the admin panel.
+// Home-page gallery: a fixed, curated 6-tile bento. Extra uploads live on /gallery.
 export default function GalleryPreview() {
   const { data } = useApi(
-    (signal) => publicApi.gallery({ limit: COUNT, sort: 'displayOrder' }, signal),
+    (signal) => publicApi.gallery({ limit: FETCH, sort: 'displayOrder' }, signal),
     []
   );
-  const items = (data || []).slice(0, COUNT);
-  const tiles = Array.from({ length: COUNT }, (_, i) => items[i] || null);
+
+  const tiles = arrange(data || []); // always COUNT entries (null = empty slot)
+  const shown = tiles.filter(Boolean); // lightbox only cycles through real images
 
   const [hovered, setHovered] = useState(null);
   const [open, setOpen] = useState(null);
@@ -224,22 +241,24 @@ export default function GalleryPreview() {
           A peek at our latest work. Tap any photo to explore.
         </p>
 
-        <div
-          className="mt-10 grid grid-flow-dense auto-rows-[130px] grid-cols-2 gap-3 sm:auto-rows-[170px] sm:gap-4 md:auto-rows-[190px] md:grid-cols-3"
-          onPointerLeave={() => setHovered(null)}
-        >
-          {tiles.map((item, i) => (
-            <Tile
-              key={item?._id || i}
-              item={item}
-              index={i}
-              active={hovered === i}
-              anyActive={hovered !== null && !!tiles[hovered]}
-              onHover={setHovered}
-              onOpen={setOpen}
-              isLast={i === COUNT - 1}
-            />
-          ))}
+        <div className="mt-10 [container-type:inline-size]" onPointerLeave={() => setHovered(null)}>
+          <div
+            className="grid grid-cols-12 grid-flow-dense [--g:10px] sm:[--g:16px]"
+            style={{ gap: 'var(--g)', gridAutoRows: 'calc((100cqw - 11 * var(--g)) / 12)' }}
+          >
+            {tiles.map((item, i) => (
+              <Tile
+                key={item?._id || `slot-${i}`}
+                item={item}
+                index={i}
+                active={hovered === i}
+                anyActive={hovered !== null && !!tiles[hovered]}
+                onHover={setHovered}
+                onOpen={(idx) => setOpen(shown.indexOf(tiles[idx]))}
+                isLast={i === COUNT - 1}
+              />
+            ))}
+          </div>
         </div>
 
         <div className="mt-10 text-center">
@@ -249,8 +268,13 @@ export default function GalleryPreview() {
         </div>
       </div>
 
-      {open !== null && items.length > 0 && (
-        <Lightbox items={items} index={Math.min(open, items.length - 1)} onClose={() => setOpen(null)} onChange={setOpen} />
+      {open !== null && shown.length > 0 && (
+        <Lightbox
+          items={shown}
+          index={Math.min(open, shown.length - 1)}
+          onClose={() => setOpen(null)}
+          onChange={setOpen}
+        />
       )}
     </section>
   );

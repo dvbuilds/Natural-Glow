@@ -9,10 +9,10 @@ const SettingsContext = createContext(null);
 const DEFAULTS = {
   salonName: 'Natural Glow Beauty Parlour',
   tagline: '',
-  phone: '',
+  phone: '+91824 014 4434',
   whatsappNumber: '',
   email: '',
-  address: { line1: '', area: '', city: 'Shyamnagar', state: '', postalCode: '', landmark: '' },
+  address: { line1: 'Abdul Samad Ln', area: 'Garulia', city: 'Kolkata', state: 'West Bengal', postalCode: '743133', landmark: '' },
   mapUrl: '',
   workingHours: [],
   social: { facebook: '', instagram: '', youtube: '' },

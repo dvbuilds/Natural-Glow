@@ -15,12 +15,12 @@ import {
   to12h,
   weekdayOfDateString,
 } from '../../lib/format.js';
-import { EMAIL_RE, PHONE_RE, hasErrors, mapApiErrors } from '../../lib/validate.js';
-import { Honeypot, SelectField, TextArea, TextField, Field } from '../ui/Form.jsx';
+import { PHONE_RE, hasErrors, mapApiErrors } from '../../lib/validate.js';
+import { Honeypot, SelectField, TextField, Field } from '../ui/Form.jsx';
 import { StatusBadge } from '../ui/Feedback.jsx';
 import Icon from '../ui/Icon.jsx';
 
-const EMPTY = { customerName: '', phone: '', email: '', serviceId: '', preferredDate: '', preferredTime: '', notes: '', website: '' };
+const EMPTY = { customerName: '', phone: '', serviceId: '', preferredDate: '', preferredTime: '', website: '' };
 
 // Human messages for backend error codes (POST /appointments)
 const CODE_MESSAGES = {
@@ -88,7 +88,6 @@ export default function BookingForm() {
     const v = values;
     if (v.customerName.trim().length < 2) e.customerName = 'Please enter your name (at least 2 characters).';
     if (!PHONE_RE.test(v.phone.trim())) e.phone = 'Enter a valid phone number (8–17 digits, optional +).';
-    if (v.email.trim() && !EMAIL_RE.test(v.email.trim())) e.email = 'Enter a valid email address or leave it blank.';
     if (!v.serviceId) e.serviceId = 'Please choose a service.';
     if (!v.preferredDate) e.preferredDate = 'Please choose a date.';
     else if (v.preferredDate < today) e.preferredDate = 'Please choose today or a later date.';
@@ -97,7 +96,6 @@ export default function BookingForm() {
     else if (!e.preferredDate && istInstant(v.preferredDate, v.preferredTime).getTime() < Date.now() + MIN_LEAD_MINUTES * 60000) {
       e.preferredTime = `Please choose a time at least ${MIN_LEAD_MINUTES} minutes from now.`;
     }
-    if (v.notes.length > 500) e.notes = 'Notes can be at most 500 characters.';
     return e;
   };
 
@@ -114,11 +112,9 @@ export default function BookingForm() {
       const { data } = await publicApi.createAppointment({
         customerName: values.customerName.trim(),
         phone: values.phone.trim(),
-        ...(values.email.trim() ? { email: values.email.trim() } : {}),
         serviceId: values.serviceId,
         preferredDate: values.preferredDate,
         preferredTime: values.preferredTime,
-        ...(values.notes.trim() ? { notes: values.notes.trim() } : {}),
         website: values.website,
       });
       setDone(data);
@@ -187,7 +183,6 @@ export default function BookingForm() {
 
         <TextField label="Full name" required value={values.customerName} onChange={set('customerName')} error={errors.customerName} autoComplete="name" maxLength={80} />
         <TextField label="Phone" required type="tel" value={values.phone} onChange={set('phone')} error={errors.phone} autoComplete="tel" placeholder="+91 …" />
-        <TextField label="Email (optional)" type="email" value={values.email} onChange={set('email')} error={errors.email} autoComplete="email" className="sm:col-span-2" />
 
         <div className="sm:col-span-2">
           <SelectField label="Service" required value={values.serviceId} onChange={set('serviceId')} error={errors.serviceId} disabled={servicesLoading}>
@@ -226,7 +221,7 @@ export default function BookingForm() {
             ))}
           </SelectField>
         ) : (
-          <Field label="Preferred time" required error={errors.preferredTime} hint={timeOptions.mode === 'closed' ? undefined : undefined}>
+          <Field label="Preferred time" required error={errors.preferredTime}>
             <input
               type="time"
               className={`input ${errors.preferredTime ? 'input-invalid' : ''}`}
@@ -243,8 +238,6 @@ export default function BookingForm() {
         {timeOptions.mode === 'slots' && (
           <p className="text-xs text-ink/55 sm:col-span-2">Open {to12h(timeOptions.hours.open)} – {to12h(timeOptions.hours.close)} on this day. Times are IST.</p>
         )}
-
-        <TextArea label="Notes (optional)" className="sm:col-span-2" rows={3} value={values.notes} onChange={set('notes')} error={errors.notes} maxLength={500} hint={`${values.notes.length}/500`} />
       </div>
 
       {formError && (
