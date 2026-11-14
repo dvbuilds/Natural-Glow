@@ -56,8 +56,10 @@ export const formatAddress = (a = {}) =>
 export const digitsOnly = (s = '') => String(s).replace(/\D/g, '');
 
 export const whatsappLink = (number, text) => {
-  const d = digitsOnly(number);
+  let d = digitsOnly(number);
   if (!d) return '';
+  if (d.length === 10) d = `91${d}`; // bare Indian mobile number -> add the country code so wa.me works
+  else if (d.length === 11 && d.startsWith('0')) d = `91${d.slice(1)}`;
   return `https://wa.me/${d}${text ? `?text=${encodeURIComponent(text)}` : ''}`;
 };
 

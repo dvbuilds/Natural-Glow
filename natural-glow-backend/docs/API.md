@@ -88,7 +88,8 @@ Public salon details. Unknown details are empty strings until the admin fills th
 ```json
 { "data": { "salonName": "Natural Glow Beauty Parlour", "tagline": "", "phone": "", "whatsappNumber": "",
   "email": "", "address": { "line1": "", "area": "", "city": "Shyamnagar", "state": "", "postalCode": "", "landmark": "" },
-  "mapUrl": "", "workingHours": [ { "day": "monday", "open": "10:00", "close": "20:00", "isClosed": false } ],
+  "mapUrl": "", "serviceAreas": ["Kanchrapara", "Shyamnagar", "Barrackpore"],
+  "workingHours": [ { "day": "monday", "open": "10:00", "close": "20:00", "isClosed": false } ],
   "social": { "facebook": "", "instagram": "", "youtube": "" },
   "bookingNotice": "Appointment requests are confirmed by the salon. Submitting a request does not reserve a slot.",
   "seoTitle": "", "seoDescription": "" } }
@@ -208,11 +209,12 @@ Same CRUD shape. `title` and `offerPrice` required.
 
 ### Settings — `/admin/settings`
 - `GET /admin/settings`
-- `PUT /admin/settings` — partial: omitted top-level fields are unchanged; `address`, `social` and `workingHours` are replaced as a whole when sent.
+- `PUT /admin/settings` — partial: omitted top-level fields are unchanged; `address`, `social`, `serviceAreas` and `workingHours` are replaced as a whole when sent.
 ```json
 { "phone": "+91XXXXXXXXXX", "whatsappNumber": "91XXXXXXXXXX", "email": "salon@example.com",
   "address": { "line1": "…", "area": "…", "city": "Shyamnagar", "state": "…", "postalCode": "…", "landmark": "…" },
   "mapUrl": "https://maps.google.com/…",
+  "serviceAreas": ["Kanchrapara", "Kalyani", "Naihati", "Barrackpore"],
   "workingHours": [ { "day": "monday", "open": "10:00", "close": "20:00" }, { "day": "sunday", "isClosed": true } ],
   "social": { "instagram": "https://instagram.com/…" },
   "seoTitle": "…", "seoDescription": "…" }

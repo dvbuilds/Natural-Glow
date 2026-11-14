@@ -31,6 +31,8 @@ const salonSettingsSchema = new mongoose.Schema(
       landmark: { type: String, trim: true, maxlength: 160, default: '' },
     },
     mapUrl: { type: String, trim: true, maxlength: 500, default: '' },
+    // Areas the salon serves (e.g. Kanchrapara … Barrackpore). Filled in by the admin; shown in the site footer.
+    serviceAreas: { type: [{ type: String, trim: true, maxlength: 60 }], default: [] },
     workingHours: { type: [hoursSchema], default: [] },
     social: {
       facebook: { type: String, trim: true, maxlength: 300, default: '' },

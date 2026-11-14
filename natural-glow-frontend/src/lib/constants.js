@@ -1,5 +1,10 @@
 // Mirrors backend src/models/constants.js — keep in sync.
 export const SERVICE_CATEGORIES = ['hair', 'skin', 'makeup', 'bridal', 'nails', 'waxing', 'spa', 'other'];
+// "Makeup" services (bridal makeup included). They get their own section on the Home page, are left out of the
+// Home "Services" section, and are listed first on the Services page.
+export const MAKEUP_CATEGORIES = ['makeup', 'bridal'];
+export const isMakeupService = (service) => MAKEUP_CATEGORIES.includes(service?.category);
+
 export const GALLERY_CATEGORIES = [...SERVICE_CATEGORIES, 'salon', 'events'];
 export const PRICE_TYPES = [
   { value: 'fixed', label: 'Fixed price' },

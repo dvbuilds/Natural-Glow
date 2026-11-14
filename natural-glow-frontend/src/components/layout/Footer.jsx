@@ -13,11 +13,7 @@ export default function Footer() {
   const { settings, addressLine } = useSettings();
   const socials = SOCIALS.filter((s) => settings.social[s.key]);
 
-  console.log({
-  settings,
-  addressLine,
-  phone: settings.phone,
-});
+  const areas = settings.serviceAreas || [];
 
   return (
     <footer className="bg-olive-800 text-cream-100">
@@ -85,6 +81,22 @@ export default function Footer() {
           )}
         </div>
       </div>
+      {areas.length > 0 && (
+        <div className="border-t border-cream-200/15">
+          <div className="container-x py-8">
+            <h3 className="flex items-center gap-2 font-sans text-sm font-medium text-cream-50">
+              <Icon name="pin" size={16} /> Areas We Serve
+            </h3>
+            <ul className="mt-4 flex flex-wrap gap-2 text-sm text-cream-200/85">
+              {areas.map((a) => (
+                <li key={a} className="rounded-full border border-cream-200/25 px-3 py-1">
+                  {a}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
       <div className="border-t border-cream-200/15 py-5 text-center text-xs text-cream-200/65">
         © {new Date().getFullYear()} {settings.salonName}. All rights reserved.
       </div>

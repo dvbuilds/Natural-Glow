@@ -21,6 +21,7 @@ const toForm = (s) => {
     email: s.email || '',
     address: { line1: '', area: '', city: '', state: '', postalCode: '', landmark: '', ...(s.address || {}) },
     mapUrl: s.mapUrl || '',
+    serviceAreas: (s.serviceAreas || []).join('\n'),
     social: { facebook: '', instagram: '', youtube: '', ...(s.social || {}) },
     bookingNotice: s.bookingNotice || '',
     seoTitle: s.seoTitle || '',
@@ -36,6 +37,9 @@ function validate(f) {
   if (f.whatsappNumber.trim() && !PHONE_RE.test(f.whatsappNumber.trim())) e.whatsappNumber = 'Enter a valid number (with country code, e.g. 91…).';
   if (f.email.trim() && !EMAIL_RE.test(f.email.trim())) e.email = 'Enter a valid email address.';
   if (f.mapUrl.trim() && !isHttpsUrl(f.mapUrl.trim())) e.mapUrl = 'Must be a full https:// URL.';
+  const areas = parseAreas(f.serviceAreas);
+  if (areas.length > 60) e.serviceAreas = 'You can list at most 60 areas.';
+  else if (areas.some((a) => a.length > 60)) e.serviceAreas = 'Each area name must be 60 characters or fewer.';
   for (const k of ['facebook', 'instagram', 'youtube']) {
     if (f.social[k].trim() && !isHttpsUrl(f.social[k].trim())) e[`social.${k}`] = 'Must be a full https:// URL.';
   }
@@ -48,6 +52,20 @@ function validate(f) {
   return e;
 }
 
+// One area per line (commas also work). Blanks and duplicates are dropped; order is kept.
+const parseAreas = (text) => {
+  const seen = new Set();
+  return String(text || '')
+    .split(/[\n,]+/)
+    .map((a) => a.trim().replace(/\s+/g, ' '))
+    .filter((a) => {
+      const k = a.toLowerCase();
+      if (!a || seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+};
+
 const toPayload = (f) => ({
   salonName: f.salonName.trim(),
   tagline: f.tagline.trim(),
@@ -56,6 +74,7 @@ const toPayload = (f) => ({
   email: f.email.trim(),
   address: Object.fromEntries(Object.entries(f.address).map(([k, v]) => [k, String(v).trim()])),
   mapUrl: f.mapUrl.trim(),
+  serviceAreas: parseAreas(f.serviceAreas),
   // Only days with times (or marked closed) are saved. Days left blank have no restriction.
   workingHours: WEEKDAYS.filter((d) => f.hours[d].isClosed || (f.hours[d].open && f.hours[d].close)).map((d) =>
     f.hours[d].isClosed ? { day: d, isClosed: true } : { day: d, open: f.hours[d].open, close: f.hours[d].close, isClosed: false }
@@ -144,6 +163,19 @@ export default function SettingsPage() {
           <TextField label="PIN code" value={form.address.postalCode} onChange={setNested('address', 'postalCode')} error={errors['address.postalCode']} maxLength={12} />
           <TextField label="Landmark" className="sm:col-span-2" value={form.address.landmark} onChange={setNested('address', 'landmark')} error={errors['address.landmark']} maxLength={160} />
           <TextField label="Google Maps link" className="sm:col-span-2" placeholder="https://maps.google.com/…" value={form.mapUrl} onChange={set('mapUrl')} error={errors.mapUrl} hint="Powers the “Get directions” button. A Google Maps *embed* URL (…/maps/embed?…) also shows the map on the site." />
+        </FormSection>
+
+        <FormSection title="Areas of service">
+          <TextArea
+            label="Areas we serve"
+            className="sm:col-span-2"
+            rows={6}
+            value={form.serviceAreas}
+            onChange={set('serviceAreas')}
+            error={errors.serviceAreas}
+            placeholder={'Kanchrapara\nKalyani\nNaihati\nShyamnagar\nBarrackpore'}
+            hint={`One area per line, in the order you want them shown (from Kanchrapara to Barrackpore). ${parseAreas(form.serviceAreas).length} listed · shown in the website footer.`}
+          />
         </FormSection>
 
         <fieldset className="rounded-xl border border-gold-300/70 p-4">

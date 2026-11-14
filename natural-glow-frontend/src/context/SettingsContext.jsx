@@ -14,6 +14,7 @@ const DEFAULTS = {
   email: '',
   address: { line1: 'Abdul Samad Ln', area: 'Garulia', city: 'Kolkata', state: 'West Bengal', postalCode: '743133', landmark: '' },
   mapUrl: '',
+  serviceAreas: [],
   workingHours: [],
   social: { facebook: '', instagram: '', youtube: '' },
   bookingNotice: 'Appointment requests are confirmed by the salon. Submitting a request does not reserve a slot.',
@@ -37,7 +38,8 @@ export function SettingsProvider({ children }) {
       error,
       reload,
       addressLine: formatAddress(settings.address),
-      whatsapp: (text) => whatsappLink(settings.whatsappNumber, text),
+      // Admin's WhatsApp number; falls back to the salon phone number if no WhatsApp number is saved yet.
+      whatsapp: (text) => whatsappLink(settings.whatsappNumber || settings.phone, text),
     };
   }, [data, loading, error, reload]);
 

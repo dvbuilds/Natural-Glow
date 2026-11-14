@@ -1,15 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { publicApi } from '../api/public.js';
 import PageHeader from '../components/layout/PageHeader.jsx';
 import ServiceCard from '../components/services/ServiceCard.jsx';
 import { EmptyState, ErrorState, Pagination, Skeleton } from '../components/ui/Feedback.jsx';
 import Icon from '../components/ui/Icon.jsx';
 import { useSettings } from '../context/SettingsContext.jsx';
-import { useApi } from '../hooks/useApi.js';
+import { useServices } from '../context/ServicesContext.jsx';
 import { useDebounce } from '../hooks/useDebounce.js';
 import { usePageMeta } from '../hooks/usePageMeta.js';
-import { SERVICE_CATEGORIES, SERVICE_SORTS, label } from '../lib/constants.js';
+import { SERVICE_CATEGORIES, SERVICE_SORTS, isMakeupService, label } from '../lib/constants.js';
+
+const PAGE_SIZE = 9;
+
+const SORTERS = {
+  displayOrder: () => 0, // the list already arrives in the admin's display order (stable sort keeps it)
+  price: (a, b) => a.price - b.price,
+  '-price': (a, b) => b.price - a.price,
+  name: (a, b) => a.name.localeCompare(b.name),
+  '-createdAt': (a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')),
+};
 
 export default function Services() {
   const { settings } = useSettings();
@@ -28,9 +37,22 @@ export default function Services() {
 
   useEffect(() => setPage(1), [category, debounced, sort]);
 
-  const query = { page, limit: 9, category: category || undefined, search: debounced || undefined, sort };
-  const { data, meta, loading, error, reload } = useApi((signal) => publicApi.services(query, signal), [JSON.stringify(query)]);
-  const items = data || [];
+  const { services, loading, error, reload } = useServices();
+
+  // Filter + sort, then always list makeup (and bridal makeup) first. Sorting happens inside each group.
+  const filtered = useMemo(() => {
+    const q = debounced.toLowerCase();
+    const sorter = SORTERS[sort] || SORTERS.displayOrder;
+    const list = services
+      .filter((s) => (!category || s.category === category) && (!q || `${s.name} ${s.description || ''}`.toLowerCase().includes(q)))
+      .sort(sorter);
+    return [...list.filter(isMakeupService), ...list.filter((s) => !isMakeupService(s))];
+  }, [services, category, debounced, sort]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const items = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const meta = { page: currentPage, totalPages, total: filtered.length };
 
   const setCategory = (c) => {
     const next = new URLSearchParams(params);
@@ -69,7 +91,7 @@ export default function Services() {
             {items.map((s) => <ServiceCard key={s._id} service={s} />)}
           </div>
 
-          {error && <ErrorState error={error} onRetry={reload} className="mt-6" />}
+          {error && !services.length && <ErrorState error={error} onRetry={reload} className="mt-6" />}
           {!loading && !error && !items.length && (
             <EmptyState title="No services found">
               {debounced || category ? 'Try a different category or search term.' : 'Our service menu will appear here shortly.'}

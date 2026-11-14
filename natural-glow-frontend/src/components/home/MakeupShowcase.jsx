@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useServices } from '../../context/ServicesContext.jsx';
+import { isMakeupService, label } from '../../lib/constants.js';
 import { optimizeImage } from '../../lib/format.js';
 import ImageSlot from '../ui/ImageSlot.jsx';
 
-// ✏️ Edit this list. Put the image URL in `image` (Cloudinary URL or a path like '/images/bridal.jpg').
+// ✏️ Fallback list: shown only while no makeup/bridal service has been added in Admin → Services.
+// Once the admin adds makeup services, those are shown here instead (name, description, photo, "Book" link).
+// Edit this list. Put the image URL in `image` (Cloudinary URL or a path like '/images/bridal.jpg').
 // Leave `image` empty to show a placeholder until you have the photo.
 const LOOKS = [
   {
@@ -48,16 +52,35 @@ function Photo({ look, transform, className = '' }) {
       className={`h-full w-full object-cover object-top ${className}`}
     />
   ) : (
-    <ImageSlot src="" alt={look.title} label={look.title} hint="Add an image in MakeupShowcase.jsx" className="h-full w-full" />
+    <ImageSlot src="" alt={look.title} label={look.title} hint={look.serviceId ? 'Add imageUrl in Admin → Services' : 'Add an image in MakeupShowcase.jsx'} className="h-full w-full" />
   );
 }
 
-export default function MakeupShowcase({ looks = LOOKS }) {
-  const [activeId, setActiveId] = useState(looks[0]?.id);
+const MAX_LOOKS = 4;
+
+export default function MakeupShowcase({ looks: fallbackLooks = LOOKS }) {
+  const { services, loading } = useServices();
+  // Makeup services from the admin panel (makeup first, then bridal; admin display order kept within each).
+  const fromAdmin = services
+    .filter(isMakeupService)
+    .sort((a, b) => Number(b.category === 'makeup') - Number(a.category === 'makeup'))
+    .slice(0, MAX_LOOKS)
+    .map((s) => ({
+      id: s._id,
+      title: s.name,
+      tag: label(s.category),
+      description: s.description || '',
+      image: s.imageUrl || '',
+      serviceId: s._id,
+    }));
+  const looks = fromAdmin.length ? fromAdmin : fallbackLooks;
+
+  const [activeId, setActiveId] = useState(null);
   const active = looks.find((l) => l.id === activeId) || looks[0];
   const others = looks.filter((l) => l.id !== active?.id);
 
-  if (!active) return null;
+  // Wait for the services request so the fallback looks don't flash before the admin's makeup services arrive.
+  if (!active || (loading && !services.length)) return null;
 
   return (
     <section className="section pt-20">
@@ -79,10 +102,15 @@ export default function MakeupShowcase({ looks = LOOKS }) {
             <div key={`${active.id}-text`} className="flex flex-1 flex-col items-start p-4">
               <span className="text-xs font-medium uppercase tracking-wider text-neutral-500">{active.tag}</span>
               <h3 className="mt-0.5 font-serif text-xl sm:text-2xl">{active.title}</h3>
-              <p className="mt-1 line-clamp-2 max-w-md text-sm text-neutral-600">{active.description}</p>
-              <Link to="/contact#booking" className="btn btn-primary mt-3 inline-flex">
-                Book this look
-              </Link>
+              {active.description && <p className="mt-1 line-clamp-2 max-w-md text-sm text-neutral-600">{active.description}</p>}
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <Link to={active.serviceId ? `/contact?service=${active.serviceId}#booking` : '/contact#booking'} className="btn btn-primary inline-flex">
+                  Book this look
+                </Link>
+                <Link to="/services" className="text-sm font-medium text-olive-800 hover:text-olive-900">
+                  View all makeup services
+                </Link>
+              </div>
             </div>
           </article>
 

@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
 import { useServices } from '../../context/ServicesContext.jsx';
+import { isMakeupService } from '../../lib/constants.js';
 import ServiceCard from '../services/ServiceCard.jsx';
 import { EmptyState, ErrorState, Skeleton } from '../ui/Feedback.jsx';
 
 export default function ServicesPreview() {
   const { services, loading, error, reload } = useServices();
+  // Makeup services have their own Home section, so this one shows everything else.
   // Featured services first (set in the admin panel), then the rest, 4 in total.
-  const picks = [...services].sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured)).slice(0, 4);
+  const picks = services.filter((s) => !isMakeupService(s)).sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured)).slice(0, 4);
 
   return (
     <section className="bg-sage-200/70 section">

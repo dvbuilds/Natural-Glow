@@ -46,6 +46,19 @@ export const updateSettingsBody = nonEmptyObject(
       landmark: plainText(0, 160).optional(),
     }),
     mapUrl: optionalUrl,
+    // Replaced as a whole when sent. Blank entries and case-insensitive duplicates are dropped.
+    serviceAreas: z
+      .array(plainText(0, 60))
+      .max(60, 'At most 60 areas')
+      .transform((list) => {
+        const seen = new Set();
+        return list.filter((a) => {
+          const key = a.toLowerCase();
+          if (!a || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      }),
     workingHours: z
       .array(hours)
       .max(7)
