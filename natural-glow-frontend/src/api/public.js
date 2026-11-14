@@ -9,6 +9,7 @@ export const publicApi = {
   offers: (params, signal) => request('/offers', { params, signal }),
   offer: (id, signal) => request(`/offers/${id}`, { signal }),
   settings: (signal) => request('/settings', { signal }),
+  trackAppointment: (token, signal) => request(`/appointments/track/${token}`, { signal }),
   createAppointment: (body) => request('/appointments', { method: 'POST', body }),
   createEnquiry: (body) => request('/contact', { method: 'POST', body }),
 };

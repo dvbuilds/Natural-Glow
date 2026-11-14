@@ -11,6 +11,11 @@ export const create = asyncHandler(async (req, res) => {
   });
 });
 
+export const track = asyncHandler(async (req, res) => {
+  res.set('Cache-Control', 'no-store'); // status changes while the customer waits
+  sendSuccess(res, await appointmentService.getAppointmentByToken(req.params.token));
+});
+
 export const list = asyncHandler(async (req, res) => {
   const { items, meta } = await appointmentService.listAppointments(req.query);
   sendSuccess(res, items, { meta });

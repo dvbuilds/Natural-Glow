@@ -6,7 +6,7 @@ import { publicServiceQuery } from '../validators/service.validator.js';
 import { publicTestimonialQuery } from '../validators/testimonial.validator.js';
 import { publicOfferQuery } from '../validators/offer.validator.js';
 import { publicGalleryQuery } from '../validators/gallery.validator.js';
-import { createAppointmentBody } from '../validators/appointment.validator.js';
+import { createAppointmentBody, trackingParams } from '../validators/appointment.validator.js';
 import { createEnquiryBody } from '../validators/enquiry.validator.js';
 import { serviceController } from '../controllers/service.controller.js';
 import { testimonialController } from '../controllers/testimonial.controller.js';
@@ -38,6 +38,8 @@ router.post(
   validate({ body: createAppointmentBody }),
   appointmentController.create
 );
+// Customer checks the status of the request they made (confirmed by the salon, rescheduled, …)
+router.get('/appointments/track/:token', validate({ params: trackingParams }), appointmentController.track);
 router.post('/contact', formLimiter, validate({ body: createEnquiryBody }), enquiryController.create);
 
 export default router;

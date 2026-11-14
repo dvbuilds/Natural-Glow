@@ -25,6 +25,8 @@ export const createAppointmentBody = z.object({
   website: z.string().max(0, 'Invalid submission').optional(),
 });
 
+export const trackingParams = z.object({ token: z.string().regex(/^[a-f0-9]{32}$/, 'Invalid tracking code') });
+
 export const updateStatusBody = z
   .object({
     status: z.enum(APPOINTMENT_STATUSES.filter((s) => s !== 'pending')),

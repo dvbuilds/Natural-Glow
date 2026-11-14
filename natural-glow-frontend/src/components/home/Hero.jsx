@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { IMAGES } from '../../config/images.js';
 import { useSettings } from '../../context/SettingsContext.jsx';
 import ImageSlot from '../ui/ImageSlot.jsx';
-import Icon from '../ui/Icon.jsx';
 import HeroHighlights from './Highlights.jsx';
 
 const SLIDE_MS = 4500;
@@ -36,8 +35,7 @@ const SLIDES = [
 const imageFor = (i) => IMAGES.heroSlides?.[i] || (i === 0 ? IMAGES.hero : IMAGES.heroSlides?.[0] || IMAGES.hero);
 
 export default function Hero() {
-  const { settings, whatsapp } = useSettings();
-  const waHref = whatsapp(`Hello ${settings.salonName}, I would like to book an appointment.`);
+  const { settings } = useSettings();
 
   const [index, setIndex] = useState(0);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -133,11 +131,6 @@ export default function Hero() {
                     <Link to={s.cta.to} className="btn btn-outline">
                       {s.cta.label}
                     </Link>
-                    {waHref && (
-                      <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn btn-ghost">
-                        <Icon name="whatsapp" size={18} /> WhatsApp us
-                      </a>
-                    )}
                   </div>
                 </div>
               );

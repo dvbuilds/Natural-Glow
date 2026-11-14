@@ -113,6 +113,9 @@ Response `201`:
 ```
 Rules: service must exist and be active · time at least 60 min ahead and within `BOOKING_WINDOW_DAYS` · if working hours are configured, the time must fall within them on an open day · max 3 pending requests per phone · identical phone+service+time while active → `409 DUPLICATE_APPOINTMENT`. Any client-sent `status`, `price`, `servicePrice` or `serviceName` is ignored. Do not render a hidden `website` field with a value — it is a honeypot (non-empty → 400).
 
+### `GET /appointments/track/:token`
+`POST /appointments` also returns a secret `trackingToken`. The website keeps it in the customer's browser and calls this endpoint to show the live status after a refresh. Returns `{ customerName, serviceName, servicePrice, preferredAt, status, updatedAt }` (no phone, notes or history). `404 APPOINTMENT_NOT_FOUND` for unknown tokens. The token is never included in admin responses.
+
 ### `POST /contact` — rate limited (10/hour/IP)
 ```json
 { "name": "Visitor", "email": "v@example.com", "phone": "", "subject": "Bridal makeup", "message": "At least 10 characters." }

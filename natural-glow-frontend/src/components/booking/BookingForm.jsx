@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { publicApi } from '../../api/public.js';
 import { BOOKING_WINDOW_DAYS, MIN_LEAD_MINUTES } from '../../config/env.js';
@@ -8,7 +8,6 @@ import { label } from '../../lib/constants.js';
 import {
   addDaysIst,
   buildSlots,
-  formatDateTime,
   formatPrice,
   istDateString,
   istInstant,
@@ -17,8 +16,7 @@ import {
 } from '../../lib/format.js';
 import { PHONE_RE, hasErrors, mapApiErrors } from '../../lib/validate.js';
 import { Honeypot, SelectField, TextField, Field } from '../ui/Form.jsx';
-import { StatusBadge } from '../ui/Feedback.jsx';
-import Icon from '../ui/Icon.jsx';
+import AppointmentTracker, { trackedToken } from './AppointmentTracker.jsx';
 
 const EMPTY = { customerName: '', phone: '', serviceId: '', preferredDate: '', preferredTime: '', website: '' };
 
@@ -39,14 +37,23 @@ const CODE_FIELD = {
 };
 
 export default function BookingForm() {
-  const { settings, whatsapp } = useSettings();
+  const { settings } = useSettings();
   const { services, loading: servicesLoading, error: servicesError } = useServices();
   const [params] = useSearchParams();
   const [values, setValues] = useState({ ...EMPTY, serviceId: params.get('service') || '' });
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // The customer's last request (kept in this browser) so they still see its status after a refresh.
+  const [token, setToken] = useState(() => trackedToken.get());
   const [done, setDone] = useState(null);
+
+  const startNew = useCallback(() => {
+    trackedToken.clear();
+    setToken('');
+    setDone(null);
+    setValues({ ...EMPTY });
+  }, []);
 
   // Preselect when arriving from "Book" links (e.g. /contact?service=<id>#booking)
   const serviceParam = params.get('service');
@@ -117,7 +124,9 @@ export default function BookingForm() {
         preferredTime: values.preferredTime,
         website: values.website,
       });
+      if (data.trackingToken) trackedToken.set(data.trackingToken);
       setDone(data);
+      setToken(data.trackingToken || '');
     } catch (err) {
       if (err.code === 'VALIDATION_ERROR') {
         setErrors(mapApiErrors(err));
@@ -132,44 +141,8 @@ export default function BookingForm() {
     }
   };
 
-  if (done) {
-    const waHref = whatsapp(
-      `Hello ${settings.salonName}, I just sent an appointment request for ${done.serviceName} on ${formatDateTime(done.preferredAt)}.`
-    );
-    return (
-      <div className="card p-6 sm:p-8" role="status">
-        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-sage-200 text-olive-800">
-          <Icon name="check" size={22} />
-        </span>
-        <h3 className="mt-4 font-serif text-2xl">Request received</h3>
-        <p className="mt-2 text-sm text-ink/75">
-          Thank you! Your request is <strong>pending</strong> and is <strong>not confirmed or reserved yet</strong>. The salon will contact you to confirm
-          the time.
-        </p>
-        <dl className="mt-5 space-y-2 rounded-xl bg-cream-100 p-4 text-sm">
-          <div className="flex justify-between gap-4"><dt className="text-ink/60">Service</dt><dd className="text-right font-medium">{done.serviceName}</dd></div>
-          <div className="flex justify-between gap-4"><dt className="text-ink/60">Price</dt><dd className="font-medium">{formatPrice(done.servicePrice)}</dd></div>
-          <div className="flex justify-between gap-4"><dt className="text-ink/60">Requested time</dt><dd className="text-right font-medium">{formatDateTime(done.preferredAt)}</dd></div>
-          <div className="flex justify-between gap-4"><dt className="text-ink/60">Status</dt><dd><StatusBadge status={done.status} /></dd></div>
-        </dl>
-        <div className="mt-6 flex flex-wrap gap-3">
-          {waHref && (
-            <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
-              <Icon name="whatsapp" size={18} /> Message us on WhatsApp
-            </a>
-          )}
-          <button
-            className="btn btn-outline"
-            onClick={() => {
-              setDone(null);
-              setValues({ ...EMPTY });
-            }}
-          >
-            Send another request
-          </button>
-        </div>
-      </div>
-    );
+  if (token || done) {
+    return <AppointmentTracker token={token} initial={done} onNew={startNew} />;
   }
 
   return (

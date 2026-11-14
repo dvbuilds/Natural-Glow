@@ -33,6 +33,10 @@ const appointmentSchema = new mongoose.Schema(
     // Unique while the request is active (pending/confirmed/rescheduled); removed otherwise.
     // Guards against duplicate submissions even under concurrent requests.
     dedupeKey: { type: String },
+
+    // Random secret returned only to the customer who made the request. It lets their browser look up the status
+    // (pending → confirmed …) after a refresh. Never exposed in admin responses.
+    trackingToken: { type: String },
   },
   baseOptions
 );
@@ -41,6 +45,7 @@ appointmentSchema.index({ status: 1, preferredAt: 1 });
 appointmentSchema.index({ createdAt: -1 });
 appointmentSchema.index({ phone: 1, status: 1 });
 appointmentSchema.index({ dedupeKey: 1 }, { unique: true, sparse: true });
+appointmentSchema.index({ trackingToken: 1 }, { unique: true, sparse: true });
 
 export const Appointment =
   mongoose.models.Appointment || mongoose.model('Appointment', appointmentSchema);

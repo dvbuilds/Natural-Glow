@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { env } from '../config/env.js';
 import { Appointment } from '../models/Appointment.js';
 import { SalonSettings } from '../models/SalonSettings.js';
@@ -81,9 +82,11 @@ export async function createAppointment(input) {
       status: 'pending',
       statusHistory: [{ status: 'pending', preferredAt }],
       dedupeKey,
+      trackingToken: crypto.randomBytes(16).toString('hex'),
     });
     return {
       _id: doc._id,
+      trackingToken: doc.trackingToken,
       serviceName: doc.serviceName,
       servicePrice: doc.servicePrice,
       preferredAt: doc.preferredAt,
@@ -93,6 +96,23 @@ export async function createAppointment(input) {
     if (err?.code === 11000) throw duplicateError(); // concurrent duplicate caught by the unique index
     throw err;
   }
+}
+
+// Public status lookup for the customer who made the request (token = 128-bit secret, see model).
+// Returns only what the customer already knows plus the current status; never phone, notes or history.
+export async function getAppointmentByToken(token) {
+  const doc = await Appointment.findOne({ trackingToken: token })
+    .select('customerName serviceName servicePrice preferredAt status updatedAt')
+    .lean();
+  if (!doc) throw ApiError.notFound('Appointment not found', { code: 'APPOINTMENT_NOT_FOUND' });
+  return {
+    customerName: doc.customerName,
+    serviceName: doc.serviceName,
+    servicePrice: doc.servicePrice,
+    preferredAt: doc.preferredAt,
+    status: doc.status,
+    updatedAt: doc.updatedAt,
+  };
 }
 
 export async function listAppointments(q) {
@@ -115,12 +135,12 @@ export async function listAppointments(q) {
     page: q.page,
     limit: q.limit,
     sort: toSort(q.sort),
-    select: '-__v -dedupeKey',
+    select: '-__v -dedupeKey -trackingToken',
   });
 }
 
 export async function getAppointment(id) {
-  const doc = await Appointment.findById(id).select('-__v -dedupeKey').lean();
+  const doc = await Appointment.findById(id).select('-__v -dedupeKey -trackingToken').lean();
   if (!doc) throw ApiError.notFound('Appointment not found');
   return doc;
 }
