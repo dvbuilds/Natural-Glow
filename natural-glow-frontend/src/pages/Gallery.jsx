@@ -183,7 +183,7 @@ import { Link } from 'react-router-dom';
 import { publicApi } from '../api/public.js';
 import { useApi } from '../hooks/useApi.js';
 import { optimizeImage } from '../lib/format.js';
-import ImageSlot from '../ui/ImageSlot.jsx';
+import ImageSlot from '../components/ui/ImageSlot.jsx';
 
 const COUNT = 4;
 const FETCH = 12;
