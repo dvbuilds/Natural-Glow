@@ -180,9 +180,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { publicApi } from '../../api/public.js';
-import { useApi } from '../../hooks/useApi.js';
-import { optimizeImage } from '../../lib/format.js';
+import { publicApi } from '../api/public.js';
+import { useApi } from '../hooks/useApi.js';
+import { optimizeImage } from '../lib/format.js';
 import ImageSlot from '../ui/ImageSlot.jsx';
 
 const COUNT = 4;
