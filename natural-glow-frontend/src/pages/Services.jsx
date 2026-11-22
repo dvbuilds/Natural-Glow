@@ -80,9 +80,9 @@ export default function Services() {
                 <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40" />
                 <input className="input pl-9 sm:w-60" placeholder="Search services" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Search services" maxLength={100} />
               </div>
-              <select className="input sm:w-52" value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort services">
+              {/* <select className="input sm:w-52" value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort services">
                 {SERVICE_SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
+              </select> */}
             </div>
           </div>
 
