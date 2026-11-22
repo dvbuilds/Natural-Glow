@@ -24,7 +24,7 @@ export default function Home() {
     <>
       <Hero />
       <AboutPreview />
-      <ServicesPreview />
+      {/* <ServicesPreview /> */}
       <MakeupShowcase />
       <HowItWorks />
       <OffersSection compact hideWhenEmpty />
