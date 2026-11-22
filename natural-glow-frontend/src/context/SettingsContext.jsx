@@ -7,7 +7,7 @@ const SettingsContext = createContext(null);
 
 // Used until/unless GET /settings answers. Contact details are intentionally empty: nothing is invented.
 const DEFAULTS = {
-  salonName: 'Natural Glow Beauty Parlour',
+  salonName: 'Natural Glow',
   tagline: '',
   phone: '+91824 014 4434',
   whatsappNumber: '',
